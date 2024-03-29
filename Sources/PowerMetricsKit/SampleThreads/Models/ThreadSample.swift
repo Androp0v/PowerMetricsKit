@@ -7,7 +7,7 @@
 
 import Foundation
 
-/// The power used by a single thread.
+/// The information retrieved when sampling a thread, including the power used.
 public struct ThreadSample {
     /// The Mach thread ID.
     public let threadID: UInt64

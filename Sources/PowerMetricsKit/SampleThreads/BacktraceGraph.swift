@@ -7,8 +7,12 @@
 
 import Foundation
 
+/// A graph containing the recorded backtrace information.
 public final class BacktraceGraph {
     
+    /// Top level nodes of the backtrace graph.
+    ///
+    /// These are the addresses from which all the function calls sampled come from.
     public var nodes = [BacktraceInfo]()
         
     private func insertInGraph(at insertionPoint: BacktraceInfo?, newInfo: BacktraceInfo) {

@@ -7,13 +7,14 @@
 
 import Foundation
 
+/// The memory address retrieved when unwinding the stack during a backtrace.
 public typealias BacktraceAddress = UInt64
-
+/// The full backtrace and the energy usage associated with it.
 public struct Backtrace: Hashable, Equatable {
     public var addresses: [BacktraceAddress]
     public var energy: Energy?
 }
-
+/// Symbol information of a backtrace, recovered using `dladdr`.
 public struct SymbolicatedInfo: Hashable {
     public let imageName: String
     public let addressInImage: UInt64
@@ -24,7 +25,7 @@ public struct SymbolicatedInfo: Hashable {
         return "0x\(String(format: "%llx", addressInImage)), \(imageName)"
     }
 }
-
+/// Minimal piece of information of a backtrace address.
 public final class SimpleBacktraceInfo {
     let address: BacktraceAddress
     let info: SymbolicatedInfo?
@@ -36,7 +37,7 @@ public final class SimpleBacktraceInfo {
         self.info = info
     }
 }
-
+/// Full backtrace information.
 public final class BacktraceInfo: Identifiable {
     public let id = UUID()
     public let address: BacktraceAddress
