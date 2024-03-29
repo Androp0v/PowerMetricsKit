@@ -2,8 +2,6 @@
 
 A package to retrieve realtime information on CPU energy consumption using the CPU's Closed Loop Performance Counters (CLPC) via `proc_pidinfo`.
 
-![Mockup](Images/Mockup.png)
-
 ## How does it work?
 
 Code related to energy measurements is under PowerWidget/. It works by using `libproc`'s `proc_pidinfo` with the new `PROC_PIDTHREADCOUNTS` option, which returns a `struct` including per-thread energy measurements from the CPU's' CLPC. The list of all threads is retrieved using `task_threads` with the PID of the current task (root privileges are required to invoke `task_threads` on other processes).
