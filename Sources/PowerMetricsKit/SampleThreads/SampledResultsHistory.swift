@@ -25,7 +25,7 @@ import Foundation
     private var writeIndex: Int = 0
     private var displayableSamples: Int = 0
     
-    init(numerOfStoredSamples: Int) {
+    nonisolated init(numerOfStoredSamples: Int) {
         self.numberOfStoredSamples = numerOfStoredSamples
         self.ringBuffer = [SampleThreadsResult](repeating: .zero, count: numerOfStoredSamples)
     }

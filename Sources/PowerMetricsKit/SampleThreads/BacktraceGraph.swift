@@ -124,8 +124,8 @@ public final class BacktraceGraph {
             let symbolicatedInfo = SymbolicateBacktraces.shared.symbolicatedInfo(for: outermostAddress)
             let backtraceInfo = BacktraceInfo(
                 address: outermostAddress,
-                energy: .zero,
                 info: symbolicatedInfo,
+                energy: .zero,
                 children: []
             )
             if addresses.count != 1 {
@@ -133,7 +133,7 @@ public final class BacktraceGraph {
             }
             return backtraceInfo
         } else {
-            return BacktraceInfo(address: .zero, energy: .zero, info: nil, children: [])
+            return BacktraceInfo(address: .zero, info: nil, energy: .zero, children: [])
         }
     }
 }

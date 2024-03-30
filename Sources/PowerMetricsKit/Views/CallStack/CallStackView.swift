@@ -15,6 +15,7 @@ import SwiftUI
         case flat
     }
     
+    let sampleManager: SampleThreadsManager
     let symbolicator = SymbolicateBacktraces.shared
     @State var expandedInfos = [BacktraceInfo]()
     @State var showFullInfo: Bool = false
@@ -37,7 +38,7 @@ import SwiftUI
         VStack(alignment: .leading, spacing: .zero) {
             Divider()
             
-            TimelineView(.periodic(from: .now, by: SampleThreadsManager.samplingTime)) { _ in
+            TimelineView(.periodic(from: .now, by: sampleManager.config.samplingTime)) { _ in
                 if visualizationMode == .graph {
                     VStack(alignment: .leading, spacing: .zero) {
                         if let lastExpanded = expandedInfos.last {

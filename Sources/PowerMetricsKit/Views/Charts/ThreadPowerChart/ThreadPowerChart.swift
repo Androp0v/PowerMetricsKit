@@ -10,6 +10,7 @@ import SwiftUI
 
 @MainActor struct ThreadPowerChart: View {
     
+    let sampleManager: SampleThreadsManager
     let info: PowerWidgetInfo
     let latestSampleTime: Date
     
@@ -43,7 +44,7 @@ import SwiftUI
                 }
             }
             .chartXScale(domain: [
-                latestSampleTime - SampleThreadsManager.samplingTime * Double(SampleThreadsManager.numberOfStoredSamples),
+                latestSampleTime - sampleManager.config.samplingTime * Double( sampleManager.config.numberOfStoredSamples),
                 latestSampleTime
             ])
             .chartForegroundStyleScale(mapping: { (displayName: String) in

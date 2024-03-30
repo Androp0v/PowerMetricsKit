@@ -10,6 +10,7 @@ import SwiftUI
 
 struct CoreTypePowerChart: View {
     
+    let sampleManager: SampleThreadsManager
     let info: PowerWidgetInfo
     let latestSampleTime: Date
     
@@ -42,7 +43,7 @@ struct CoreTypePowerChart: View {
             }
         }
         .chartXScale(domain: [
-            latestSampleTime - SampleThreadsManager.samplingTime * Double(SampleThreadsManager.numberOfStoredSamples),
+            latestSampleTime - sampleManager.config.samplingTime * Double(sampleManager.config.numberOfStoredSamples),
             latestSampleTime
         ])
         .drawingGroup()

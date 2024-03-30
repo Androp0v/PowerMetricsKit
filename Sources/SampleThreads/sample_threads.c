@@ -53,7 +53,7 @@ static double convert_mach_time(uint64_t mach_time) {
     return elapsed / 1e9;
 }
 
-sample_threads_result sample_threads(int pid) {
+sample_threads_result sample_threads(int pid, bool retrieve_dispatch_queue_names, bool retrieve_backtraces) {
  
     mach_port_t me = mach_task_self();
     kern_return_t res;
@@ -115,20 +115,22 @@ sample_threads_result sample_threads(int pid) {
         }
         
         // Attempt to retrieve the libdispatch queue
-        struct thread_identifier_info th_id_info;
-        mach_msg_type_number_t th_id_count = THREAD_IDENTIFIER_INFO_COUNT;
-        kern_return_t id_info_result = thread_info(thread,
-                                                   THREAD_IDENTIFIER_INFO,
-                                                   (thread_info_t)&th_id_info,
-                                                   &th_id_count);
-        
-        dispatch_queue_t * _Nullable thread_queue = th_id_info.dispatch_qaddr;
-        if (id_info_result == KERN_SUCCESS && thread_queue != NULL) {
-            // TODO: This crashes sometimes, need to investigate why
-            const char  * _Nullable queue_label = dispatch_queue_get_label(*thread_queue);
-            strcpy(counters_array[i].info.dispatch_queue_name, queue_label);
-        } else {
-            strcpy(counters_array[i].info.dispatch_queue_name, "");
+        if (retrieve_dispatch_queue_names) {
+            struct thread_identifier_info th_id_info;
+            mach_msg_type_number_t th_id_count = THREAD_IDENTIFIER_INFO_COUNT;
+            kern_return_t id_info_result = thread_info(thread,
+                                                       THREAD_IDENTIFIER_INFO,
+                                                       (thread_info_t)&th_id_info,
+                                                       &th_id_count);
+            
+            dispatch_queue_t * _Nullable thread_queue = th_id_info.dispatch_qaddr;
+            if (id_info_result == KERN_SUCCESS && thread_queue != NULL) {
+                // TODO: This crashes sometimes, need to investigate why
+                const char  * _Nullable queue_label = dispatch_queue_get_label(*thread_queue);
+                strcpy(counters_array[i].info.dispatch_queue_name, queue_label);
+            } else {
+                strcpy(counters_array[i].info.dispatch_queue_name, "");
+            }
         }
         
         // Retrieve power counters info
@@ -192,7 +194,9 @@ sample_threads_result sample_threads(int pid) {
         counters_array[i].info.efficiency.time = e_time;
         
         // Backtrace
-        counters_array[i].backtrace = get_backtrace(thread);
+        if (retrieve_backtraces) {
+            counters_array[i].backtrace = get_backtrace(thread);
+        }
     }
     
     sample_threads_result result;

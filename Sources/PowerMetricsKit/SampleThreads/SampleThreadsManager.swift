@@ -18,17 +18,14 @@ import SampleThreads
     
     // MARK: - Public properties
     
-    /// The timespan between each sample.
-    public static let samplingTime: TimeInterval = 0.5
-    /// The number of samples kept in the history.
-    public static let numberOfStoredSamples: Int = 60
-    
+    /// The configuration of the thread sampling.
+    public let config: PowerMetricsConfig
     /// The total count of threads spawned by the app.
     public private(set) var currentThreadCount: Int = 1
     /// Total energy used by the app since launch, in Watts-hour.
     public private(set) var totalEnergyUsage: Energy = 0
     /// Historic power figures for the app.
-    public private(set) var history = SampledResultsHistory(numerOfStoredSamples: SampleThreadsManager.numberOfStoredSamples)
+    public let history: SampledResultsHistory
     
     // MARK: - Private properties
     
@@ -45,8 +42,10 @@ import SampleThreads
 
     // MARK: - Init
     
-    private init(){}
-    public static let shared = SampleThreadsManager()
+    nonisolated public init(config: PowerMetricsConfig = .default) {
+        self.config = config
+        self.history = SampledResultsHistory(numerOfStoredSamples: config.numberOfStoredSamples)
+    }
     
     // MARK: - Sampling
     
@@ -63,8 +62,8 @@ import SampleThreads
                 }
                 self.sampleThreads(pid)
                 try? await Task.sleep(
-                    for: .seconds(Self.samplingTime),
-                    tolerance: .seconds(Self.samplingTime * 0.01)
+                    for: .seconds(config.samplingTime),
+                    tolerance: .seconds(config.samplingTime * 0.01)
                 )
             }
         }
@@ -83,29 +82,11 @@ import SampleThreads
         let currentSampleTime = continuousClock.now
         // Invoke the C code in sample_threads.c that uses proc_pidinfo to retrieve
         // performance counters including energy usage.
-        let result = sample_threads(pid)
+        let result = sample_threads(pid, config.retrieveDispatchQueueName, config.retrieveBacktraces)
         // This points directly to the C array.
         let counters = UnsafeBufferPointer(start: result.cpu_counters, count: Int(result.thread_count))
         // This creates a Swift copy of the C array.
         let rawThreadSamples = [sampled_thread_info_t](counters.map({ $0.info }))
-        // This creates a Swift copy of the backtrace.
-        let backtraces = [Backtrace](counters.map { counter in
-            let backtraceLength = counter.backtrace.length
-            let rawBacktrace = UnsafeBufferPointer(
-                start: counter.backtrace.addresses,
-                count: Int(backtraceLength)
-            )
-            let backtrace = Backtrace(
-                addresses: [UInt64](rawBacktrace.map({ $0.address & UInt64(PAC_STRIPPING_BITMASK) })),
-                energy: nil
-            )
-            if counter.backtrace.length != 0 {
-                // Free the memory allocated with malloc in get_backtrace.c, as we've
-                // created a copy for Swift code.
-                free(counter.backtrace.addresses)
-            }
-            return backtrace
-        })
         // Free the memory allocated with malloc in sample_threads.c, as we've created
         // a copy for Swift code.
         free(result.cpu_counters)
@@ -128,10 +109,16 @@ import SampleThreads
                 let start = ptr.pointer(to: \.0)!
                 return String(cString: start)
             }
-            let dispatchQueueName: String? = withUnsafePointer(to: rawThreadSample.dispatch_queue_name) { ptr in
-                let start = ptr.pointer(to: \.0)!
-                return String(cString: start)
+            
+            // Retrieve the queue name only if configured to do so
+            var dispatchQueueName: String?
+            if config.retrieveDispatchQueueName {
+                dispatchQueueName = withUnsafePointer(to: rawThreadSample.dispatch_queue_name) { ptr in
+                    let start = ptr.pointer(to: \.0)!
+                    return String(cString: start)
+                }
             }
+            
             if let previousCounter = previousRawSamples[rawThreadSample.thread_id], let lastSampleTime {
                 let performancePower = computePower(
                     previousTime: lastSampleTime,
@@ -183,19 +170,41 @@ import SampleThreads
         )
         
         self.history.addSample(sampleResult)
-        self.totalEnergyUsage += sampleResult.allThreadsPower.total * Self.samplingTime / 3600
+        self.totalEnergyUsage += sampleResult.allThreadsPower.total * config.samplingTime / 3600
         
-        // Add power info to existing backtraces
-        let backtracesWithPower = zip(backtraces, threadEnergyChanges).map { (backtrace, energy) in
-            return Backtrace(addresses: backtrace.addresses, energy: energy)
+        // Retrieve the backtraces only if configured to do so
+        if config.retrieveBacktraces {
+            // This creates a Swift copy of the backtraces.
+            let backtraces = [Backtrace](counters.map { counter in
+                let backtraceLength = counter.backtrace.length
+                let rawBacktrace = UnsafeBufferPointer(
+                    start: counter.backtrace.addresses,
+                    count: Int(backtraceLength)
+                )
+                let backtrace = Backtrace(
+                    addresses: [UInt64](rawBacktrace.map({ $0.address & UInt64(PAC_STRIPPING_BITMASK) })),
+                    energy: nil
+                )
+                if counter.backtrace.length != 0 {
+                    // Free the memory allocated with malloc in get_backtrace.c, as we've
+                    // created a copy for Swift code.
+                    free(counter.backtrace.addresses)
+                }
+                return backtrace
+            })
+            // Add power info to the backtraces
+            let backtracesWithPower = zip(backtraces, threadEnergyChanges).map { (backtrace, energy) in
+                return Backtrace(addresses: backtrace.addresses, energy: energy)
+            }
+            SymbolicateBacktraces.shared.addToBacktraceGraph(backtracesWithPower)
         }
-        SymbolicateBacktraces.shared.addToBacktraceGraph(backtracesWithPower)
         
         return sampleResult
     }
     
     // MARK: - Energy
     
+    /// Reset the global count of energy used.
     public func resetEnergyUsed() {
         self.totalEnergyUsage = .zero
     }

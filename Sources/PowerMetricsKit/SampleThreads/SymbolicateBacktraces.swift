@@ -8,6 +8,7 @@
 import Foundation
 import SampleThreads
 
+/// A class to interact to `dladdr` to retrieve information about the sampled backtraces.
 public class SymbolicateBacktraces {
     
     public var backtraceGraph = BacktraceGraph()
@@ -55,8 +56,8 @@ public class SymbolicateBacktraces {
                 } else {
                     flatBacktraces.append(SimpleBacktraceInfo(
                         address: address,
-                        energy: energy,
-                        info: symbolicatedInfo(for: address)
+                        info: symbolicatedInfo(for: address),
+                        energy: energy
                     ))
                 }
             }

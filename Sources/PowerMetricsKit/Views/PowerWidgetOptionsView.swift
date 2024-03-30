@@ -9,14 +9,24 @@ import SwiftUI
 
 struct PowerWidgetOptionsView: View {
     
+    let sampleManager: SampleThreadsManager
     @Environment(\.dismiss) var dismiss
     @Binding var chartType: ChartType
+    
+    var chartOptions: [ChartType] {
+        return ChartType.allCases.filter {
+            if !sampleManager.config.retrieveBacktraces, $0 == .callStack {
+                return false
+            }
+            return true
+        }
+    }
     
     var body: some View {
         
         VStack(alignment: .leading) {
             Picker("Chart type", selection: $chartType.animation()) {
-                ForEach(ChartType.allCases, id: \.self) {
+                ForEach(chartOptions, id: \.self) {
                     Text($0.displayName)
                         .tag($0)
                 }

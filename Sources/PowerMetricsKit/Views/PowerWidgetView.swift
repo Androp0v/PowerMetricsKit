@@ -12,8 +12,8 @@ import SwiftUI
 @MainActor public struct PowerWidgetView: View {
     
     let pid = ProcessInfo.processInfo.processIdentifier
-    let sampleManager = SampleThreadsManager.shared
-    @State var viewModel = PowerWidgetViewModel()
+    @State var sampleManager: SampleThreadsManager
+    @State var viewModel: PowerWidgetViewModel
     
     @AppStorage("chartType") var chartType: ChartType = .coreType
     @State var isResettingEnergy: Bool = false
@@ -34,7 +34,13 @@ import SwiftUI
         return numberFormatter
     }()
     
-    public init() {}
+    /// Creates a `View` that displays energy information about the parent process.
+    /// - Parameter config: The configuration used for sampling.
+    public init(config: PowerMetricsConfig = .default) {
+        let sampleManager = SampleThreadsManager(config: config)
+        self._sampleManager = State(initialValue: sampleManager)
+        self._viewModel = State(initialValue: PowerWidgetViewModel(sampleManager: sampleManager))
+    }
     
     // MARK: - View body
     
@@ -59,13 +65,21 @@ import SwiftUI
             
             switch chartType {
             case .coreType:
-                CoreTypePowerChart(info: viewModel.info, latestSampleTime: latestSampleTime)
-                    .padding(.horizontal)
-                    .padding(.bottom)
+                CoreTypePowerChart(
+                    sampleManager: sampleManager, 
+                    info: viewModel.info,
+                    latestSampleTime: latestSampleTime
+                )
+                .padding(.horizontal)
+                .padding(.bottom)
             case .thread:
-                ThreadPowerChart(info: viewModel.info, latestSampleTime: latestSampleTime)
+                ThreadPowerChart(
+                    sampleManager: sampleManager,
+                    info: viewModel.info,
+                    latestSampleTime: latestSampleTime
+                )
             case .callStack:
-                CallStackView()
+                CallStackView(sampleManager: sampleManager)
             }
         }
         .padding(.top)
@@ -122,7 +136,7 @@ import SwiftUI
         #endif
         .padding()
         .popover(isPresented: $showOptions) {
-            PowerWidgetOptionsView(chartType: $chartType)
+            PowerWidgetOptionsView(sampleManager: sampleManager, chartType: $chartType)
         }
     }
     

@@ -41,16 +41,17 @@ struct PowerWidgetInfo {
 /// Class to bridge the `SampleThreadsManager` to the UI.
 @Observable class PowerWidgetViewModel {
     
+    let sampleManager: SampleThreadsManager
     var info: PowerWidgetInfo = .empty
     var threadColors = [String: Color]()
     
-    init() {
+    init(sampleManager: SampleThreadsManager) {
+        self.sampleManager = sampleManager
         periodicRefresh()
     }
     
     @objc func update() {
         Task(priority: .high) { @SampleThreadsActor in
-            let sampleManager = SampleThreadsManager.shared
             let cpuPower = sampleManager.history.samples.last?.allThreadsPower.total ?? .zero
             let cpuEnergy = sampleManager.totalEnergyUsage
             let cpuPowerHistory = sampleManager.history.samples
@@ -69,7 +70,7 @@ struct PowerWidgetInfo {
     
     func periodicRefresh() {
         #if os(macOS)
-        let timer = Timer(timeInterval: SampleThreadsManager.samplingTime, repeats: true) { timer in
+        let timer = Timer(timeInterval: sampleManager.config.samplingTime, repeats: true) { timer in
             self.update()
         }
         RunLoop.current.add(timer, forMode: RunLoop.Mode.common)

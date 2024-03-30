@@ -46,6 +46,6 @@ typedef struct {
     sampled_thread_info_w_backtrace_t *cpu_counters;
 } sample_threads_result;
 
-sample_threads_result sample_threads(int pid);
+sample_threads_result sample_threads(int pid, bool retrieve_dispatch_queue_names, bool retrieve_backtraces);
 
 #endif /* sample_threads_h */
