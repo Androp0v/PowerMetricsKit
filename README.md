@@ -1,5 +1,7 @@
 #  PowerMetricsKit
 
+![PowerWidgetView](Sources/PowerMetricsKit/PowerMetricsKit.docc/Resources/PowerWidgetView.png)
+
 A package to retrieve realtime information on CPU energy consumption using the CPU's Closed Loop Performance Counters (CLPC) via `proc_pidinfo`.
 
 ## How does it work?

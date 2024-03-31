@@ -11,7 +11,7 @@ import SwiftUI
 /// A `View` displaying the power consumption of the app.
 @MainActor public struct PowerWidgetView: View {
     
-    let pid = ProcessInfo.processInfo.processIdentifier
+    let pid: Int32
     @State var sampleManager: SampleThreadsManager
     @State var viewModel: PowerWidgetViewModel
     
@@ -36,8 +36,9 @@ import SwiftUI
     
     /// Creates a `View` that displays energy information about the parent process.
     /// - Parameter config: The configuration used for sampling.
-    public init(config: PowerMetricsConfig = .default) {
+    public init(config: PowerMetricsConfig = .default, pid: Int32 = ProcessInfo.processInfo.processIdentifier) {
         let sampleManager = SampleThreadsManager(config: config)
+        self.pid = pid
         self._sampleManager = State(initialValue: sampleManager)
         self._viewModel = State(initialValue: PowerWidgetViewModel(sampleManager: sampleManager))
     }
