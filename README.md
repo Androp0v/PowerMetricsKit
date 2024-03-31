@@ -12,7 +12,7 @@ The `libproc.h` headers can't be imported on iOS, so they're reproduced at the b
 
 ## Documentation
 
-This package is documented using DocC. Use _Xcode > Product > Build documentation_ to compile the documentation for the package.
+This package is documented using DocC. Please see PowerMetricsKit's [documentation site](https://androp0v.github.io/PowerMetricsKit/documentation/powermetricskit/) or use _Xcode > Product > Build documentation_ to compile the documentation for the package and view it locally.
 
 ![DocumentationScreenshot](DocC.png)
 
