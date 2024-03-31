@@ -51,7 +51,7 @@ public class SymbolicateBacktraces {
             }
             // Add energies to backtrace flatmap
             for address in backtrace.addresses {
-                if let existingInfo = flatBacktraces.first(where: { $0.address == address }) {
+                if var existingInfo = flatBacktraces.first(where: { $0.address == address }) {
                     existingInfo.energy += energy
                 } else {
                     flatBacktraces.append(SimpleBacktraceInfo(

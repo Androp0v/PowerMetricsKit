@@ -87,9 +87,6 @@ import SampleThreads
         let counters = UnsafeBufferPointer(start: result.cpu_counters, count: Int(result.thread_count))
         // This creates a Swift copy of the C array.
         let rawThreadSamples = [sampled_thread_info_t](counters.map({ $0.info }))
-        // Free the memory allocated with malloc in sample_threads.c, as we've created
-        // a copy for Swift code.
-        free(result.cpu_counters)
         
         let sampleTime = Date.now
         var combinedPPower = 0.0
@@ -198,6 +195,10 @@ import SampleThreads
             }
             SymbolicateBacktraces.shared.addToBacktraceGraph(backtracesWithPower)
         }
+        
+        // Free the memory allocated with malloc in sample_threads.c, as we've created
+        // a copy for Swift code.
+        free(result.cpu_counters)
         
         return sampleResult
     }

@@ -19,6 +19,13 @@ public struct PowerMetricsConfig {
     /// Whether or not backtraces of the sampled threads should be retrieved.
     public let retrieveBacktraces: Bool
     
+    /// Create a PowerMetricsKit configuration.
+    public init(samplingTime: TimeInterval, numberOfStoredSamples: Int, retrieveDispatchQueueName: Bool, retrieveBacktraces: Bool) {
+        self.samplingTime = samplingTime
+        self.numberOfStoredSamples = numberOfStoredSamples
+        self.retrieveDispatchQueueName = retrieveDispatchQueueName
+        self.retrieveBacktraces = retrieveBacktraces
+    }
     /// The default PowerMetricsKit configuration.
     public static let `default`: PowerMetricsConfig = {
         return PowerMetricsConfig(

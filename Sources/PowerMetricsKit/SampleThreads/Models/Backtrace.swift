@@ -32,7 +32,7 @@ public struct SymbolicatedInfo: Hashable {
     }
 }
 /// Minimal piece of information of a backtrace address.
-public final class SimpleBacktraceInfo {
+public struct SimpleBacktraceInfo {
     /// A specific address in the backtrace.
     public let address: BacktraceAddress
     /// Symbol information for the given address, recovered using `dladdr`.
