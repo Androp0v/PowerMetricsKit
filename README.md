@@ -10,7 +10,7 @@ Code related to energy measurements is under PowerWidget/. It works by using `li
 
 The `libproc.h` headers can't be imported on iOS, so they're reproduced at the beginning of `sample_threads.c`, as well as the result `struct`s from the `proc_pidinfo`, using the definitions and documentation available in [Apple's OSS Distributions repository for `libproc.h`](https://github.com/apple-oss-distributions/xnu/blob/aca3beaa3dfbd42498b42c5e5ce20a938e6554e5/bsd/sys/proc_info.h).
 
-## Documentation
+## Documentation
 
 This package is documented using DocC. Use _Xcode > Product > Build documentation_ to compile the documentation for the package.
 
