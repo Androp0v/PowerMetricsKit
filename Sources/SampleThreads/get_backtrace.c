@@ -244,7 +244,7 @@ backtrace_t get_backtrace(thread_t thread) {
     } else {
         thread_suspend(thread);
 
-        mach_msg_type_number_t state_count = ARM_UNIFIED_THREAD_STATE_COUNT;
+        mach_msg_type_number_t state_count = ARM_THREAD_STATE64_COUNT;
         arm_thread_state64_t thread_state;
         kern_return_t thread_state_result = thread_get_state(thread,
                                                              ARM_THREAD_STATE64,

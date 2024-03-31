@@ -1,0 +1,59 @@
+# Deep Dive: Unwinding the stack
+
+Get to know how the code to obtain the backtraces for all the threads in the process works.
+
+## Overview
+
+This feature only works on AArch64, although it should be trivial to implement in other platforms. The steps to unwind the stack are described below, and explain the inner workings of `get_backtrace.c` in the associated `SampleThreads` library listed in ``PowerMetricsKit``'s dependencies.
+
+### Retrieving the stack contents
+
+To retrieve the content of a thread, we must first suspend it, which is done by calling Mach's `thread_suspend`. Then, the state of the thread is acquired using `thread_get_state`, which also retrieves the contents of the registers:
+```c
+thread_suspend(thread);
+mach_msg_type_number_t state_count = ARM_THREAD_STATE64_COUNT;
+arm_thread_state64_t thread_state;
+kern_return_t thread_state_result = thread_get_state(
+    thread,
+    ARM_THREAD_STATE64,
+    (thread_state_t) &thread_state,
+    &state_count
+);
+```
+Here, the call to `thread_get_state` places the fetched state of the thread into `thread_state`. `ARM_THREAD_STATE64` specifies the format of the thread state to fetch (in this case: the format for AArch64).
+
+- WARNING: Suspending a thread before unwinding its stack is required to ensure the stack is not being modified at the same time we're reading its contents. Care should be taken when suspending threads. 
+- WARNING: On macOS/iOS, `dladdr` uses mutexes internally, so it's possible to deadlock the sampling process by having `dladdr` wait on a lock that is currently held by one of the suspended threads.
+
+Once the state of the target thread has been acquired, we now want to find the addresses of the symbols in the Mach-O binary file that make up the call stack. To do that, we start by reading the latest contents of `fp` (the Frame Pointer). The Procedure Call Standard for the Arm 64-bit Architecture says:
+> Procedure Call Standard for the Arm 64-bit Architecture: Conforming code shall construct a linked list of stack-frames. Each frame shall link to the frame of its caller by means of a frame record of two 64-bit values on the stack (independent of the data model). The frame record for the innermost frame (belonging to the most recent routine invocation) shall be pointed to by the Frame Pointer register (FP). The lowest addressed double-word shall point to the previous frame record and the highest addressed double-word shall contain the value passed in LR on entry to the current function. If code uses the pointer signing extension to sign return addresses, the value in LR must be signed before storing it in the frame record. The end of the frame record chain is indicated by the address zero in the address for the previous frame. The location of the frame record within a stack frame is not specified.
+
+Thus, we can retrieve the frame pointer of the caller by dereferencing the address in the current frame pointer, and the address of `lr` (the Link Register) as the 64 bits (8 bytes) that follow the frame pointer:
+```c
+kern_return_t result = task_memcpy(
+    task,
+    current_frame_pointer,
+    0,
+    &next_frame_pointer,
+    sizeof(int64_t)
+);
+if (result != KERN_SUCCESS) {
+    break;
+}
+next_frame_pointer = (next_frame_pointer & PAC_STRIPPING_BITMASK);
+
+// Get the caller address (Link Register, lr) knowing it's a 8-byte 
+// offset from the frame pointer (fp).
+uint64_t caller_address;
+uint64_t caller_address_pointer = 8 + (current_frame_pointer & PAC_STRIPPING_BITMASK);
+kern_return_t caller_retrieval_result = task_memcpy(
+    task,
+    caller_address_pointer,
+    0,
+    &caller_address,
+    sizeof(void *)
+);
+```
+Which essentially allows us to walk back one step in the frame pointer linked list. Here `task_memcpy` wraps around `vm_read_overwrite` to safely attempt to copy the contents of a memory address (failing without crashing/signaling if the address is protected), and `PAC_STRIPPING_BITMASK` is a constant used to strip [Pointer Authentication Codes](https://developer.apple.com/documentation/security/preparing_your_app_to_work_with_pointer_authentication?) (PACs) from the memory addresses. 
+
+The `caller_address` will be saved and passed back to the Swift side of the package, where `dladdr` will be used to obtain symbol information.
