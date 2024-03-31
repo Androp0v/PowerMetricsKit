@@ -10,6 +10,12 @@ Code related to energy measurements is under PowerWidget/. It works by using `li
 
 The `libproc.h` headers can't be imported on iOS, so they're reproduced at the beginning of `sample_threads.c`, as well as the result `struct`s from the `proc_pidinfo`, using the definitions and documentation available in [Apple's OSS Distributions repository for `libproc.h`](https://github.com/apple-oss-distributions/xnu/blob/aca3beaa3dfbd42498b42c5e5ce20a938e6554e5/bsd/sys/proc_info.h).
 
+## Documentation
+
+This package is documented using DocC. Use _Xcode > Product > Build documentation_ to compile the documentation for the package.
+
+![DocumentationScreenshot](DocC.png)
+
 ## Results
 When running a single app in the foreground, the results correlate well with wall power (measured with a USB-C amp/volt meter with the device charged to 100%), after substracting the energy used by the device while idling. On macOS, results are almost identical to the `powermetrics` output (this app reports slightly less power used, which makes sense since `powermetrics` also includes CPU power used by other apps and the OS).
 
