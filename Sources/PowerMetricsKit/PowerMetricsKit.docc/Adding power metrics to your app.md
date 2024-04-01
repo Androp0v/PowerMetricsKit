@@ -4,7 +4,7 @@ Measure energy used by your app.
 
 ## Overview
 
-There are two main ways of using `PowerMetricsKit`: by adding a ``PowerWidgetView` to your app, or by calling the sampling methods from your own code.
+There are two main ways of using `PowerMetricsKit`: by adding a ``PowerWidgetView`` to your app, or by calling the sampling methods in ``SampleThreadsManager`` from your own code.
 
 ### Power widget
 
