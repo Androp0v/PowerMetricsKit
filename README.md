@@ -2,11 +2,11 @@
 
 ![PowerWidgetView](Sources/PowerMetricsKit/PowerMetricsKit.docc/Resources/PowerWidgetView.png)
 
-A package to retrieve realtime information on CPU energy consumption using the CPU's Closed Loop Performance Counters (CLPC) via `proc_pidinfo`.
+A package to retrieve realtime information on CPU energy consumption using the CPU's Closed Loop Performance Controller (CLPC) via `proc_pidinfo`.
 
 ## How does it work?
 
-Code related to energy measurements is under PowerWidget/. It works by using `libproc`'s `proc_pidinfo` with the new `PROC_PIDTHREADCOUNTS` option, which returns a `struct` including per-thread energy measurements from the CPU's' CLPC. The list of all threads is retrieved using `task_threads` with the PID of the current task (root privileges are required to invoke `task_threads` on other processes).
+Code related to energy measurements is under PowerWidget/. It works by using `libproc`'s `proc_pidinfo` with the new `PROC_PIDTHREADCOUNTS` option, which returns a `struct` including per-thread energy measurements from the CPU's' CLPC, which in turn obtains the energy results from the Digital Power Estimator (DPE). The list of all threads is retrieved using `task_threads` with the PID of the current task (root privileges are required to invoke `task_threads` on other processes).
 
 The `libproc.h` headers can't be imported on iOS, so they're reproduced at the beginning of `sample_threads.c`, as well as the result `struct`s from the `proc_pidinfo`, using the definitions and documentation available in [Apple's OSS Distributions repository for `libproc.h`](https://github.com/apple-oss-distributions/xnu/blob/aca3beaa3dfbd42498b42c5e5ce20a938e6554e5/bsd/sys/proc_info.h).
 
@@ -23,8 +23,20 @@ The results are promising when experimenting with pathologic cases, and qualitat
  
 ## Limitations
 
-Since without root privileges only the energy of the threads from the same process can be measured, APIs that trigger work on a kernel thread (ie system calls) won't be accounted for in the power metrics of the app.
+Since without root privileges and/or specific entitlements only the energy of the threads from the same process can be measured, APIs that trigger work on a kernel thread (ie system calls) won't be accounted for in the power metrics of the app.
 
 ## Compatibility
 
-Tested on A15 Bionic or newer CPUs.
+Tested on A14 Bionic or newer CPUs.
+
+## Generate documentation
+
+Run this code on a Terminal window at the root of the PowerMetricsKit package to generate the documentation for this project used in GitHub pages.
+```zsh
+swift package --allow-writing-to-directory docs generate-documentation --target PowerMetricsKit --disable-indexing --transform-for-static-hosting --hosting-base-path PowerMetricsKit --output-path docs
+```
+
+## References
+
+[1] [Apple's OSS Distributions source for `libproc.h`](https://github.com/apple-oss-distributions/xnu/blob/aca3beaa3dfbd42498b42c5e5ce20a938e6554e5/bsd/sys/proc_info.h).
+[2] [Apple's OSS Distributions overview of `Recount` subsystem](https://github.com/apple-oss-distributions/xnu/blob/5c2921b07a2480ab43ec66f5b9e41cb872bc554f/doc/recount.md).
