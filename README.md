@@ -38,5 +38,5 @@ swift package --allow-writing-to-directory docs generate-documentation --target 
 
 ## References
 
-[1] [Apple's OSS Distributions source for `libproc.h`](https://github.com/apple-oss-distributions/xnu/blob/aca3beaa3dfbd42498b42c5e5ce20a938e6554e5/bsd/sys/proc_info.h).
-[2] [Apple's OSS Distributions overview of `Recount` subsystem](https://github.com/apple-oss-distributions/xnu/blob/5c2921b07a2480ab43ec66f5b9e41cb872bc554f/doc/recount.md).
+- [Apple's OSS Distributions source for `libproc.h`](https://github.com/apple-oss-distributions/xnu/blob/aca3beaa3dfbd42498b42c5e5ce20a938e6554e5/bsd/sys/proc_info.h).
+- [Apple's OSS Distributions overview of `Recount` subsystem](https://github.com/apple-oss-distributions/xnu/blob/5c2921b07a2480ab43ec66f5b9e41cb872bc554f/doc/recount.md).
