@@ -79,6 +79,10 @@ import SwiftUI
                     info: viewModel.info,
                     latestSampleTime: latestSampleTime
                 )
+            case .usage:
+                CoreUsageChart()
+                    .padding(.horizontal)
+                    .padding(.bottom)
             case .callStack:
                 CallStackView(sampleManager: sampleManager)
             }

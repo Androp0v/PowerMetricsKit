@@ -80,8 +80,8 @@ struct PowerWidgetInfo {
             selector: #selector(update)
         )
         displayLink.preferredFrameRateRange = .init(
-            minimum: Float(1 / SampleThreadsManager.samplingTime),
-            maximum: Float(1 / SampleThreadsManager.samplingTime)
+            minimum: Float(1 / sampleManager.config.samplingTime),
+            maximum: Float(1 / sampleManager.config.samplingTime)
         )
         displayLink.add(to: .current, forMode: .common)
         #endif

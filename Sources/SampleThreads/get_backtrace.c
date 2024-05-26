@@ -71,20 +71,12 @@ static backtrace_t backtracer(intptr_t aslr_slide) {
     return build_backtrace((uint64_t *) array, size, aslr_slide);
 }
 
-static intptr_t cached_aslr_slide = 0x0;
-
 intptr_t get_aslr_slide() {
     uint32_t numImages = _dyld_image_count();
     for (uint32_t i = 0; i < numImages; i++) {
         const struct mach_header *header = _dyld_get_image_header(i);
         const char *name = _dyld_get_image_name(i);
         const char *p = strrchr(name, '/');
-        if (p && (strcmp(p + 1, "TestAppPower") == 0)) {
-            const struct mach_header *header = _dyld_get_image_header(i);
-            intptr_t slide = _dyld_get_image_vmaddr_slide(i);
-            printf("ASLR Slide: %p \n", (void *)slide);
-            cached_aslr_slide = slide;
-        }
     }
     
     struct task_dyld_info dyld_info;
@@ -232,12 +224,7 @@ backtrace_t get_backtrace(thread_t thread) {
     
     #if defined(__aarch64__)
     thread_t current_thread = mach_thread_self();
-    vm_address_t aslr_slide;
-    if (cached_aslr_slide != 0) {
-        aslr_slide = cached_aslr_slide;
-    } else {
-        aslr_slide = get_aslr_slide();
-    }
+    vm_address_t aslr_slide = get_aslr_slide();
     
     if (current_thread == thread) {
         return backtracer(aslr_slide);

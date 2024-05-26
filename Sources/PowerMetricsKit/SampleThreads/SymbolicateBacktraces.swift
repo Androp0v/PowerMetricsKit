@@ -15,8 +15,12 @@ public class SymbolicateBacktraces {
     public var flatBacktraces = [SimpleBacktraceInfo]()
     private var addressToBacktrace = [BacktraceAddress: BacktraceInfo]()
         
+    // MARK: - Init
+    
     private init() {}
     public static let shared = SymbolicateBacktraces()
+    
+    // MARK: - Functions
     
     public func symbolicatedInfo(for address: UInt64) -> SymbolicatedInfo? {
         var dlInfo = Dl_info()

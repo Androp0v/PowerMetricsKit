@@ -7,6 +7,7 @@
 
 #include "sample_threads.h"
 #include "get_backtrace.h"
+#include "get_cpu_usage.h"
 #include <dispatch/dispatch.h>
 #include <stdlib.h>
 #include <mach/mach_init.h>
@@ -197,6 +198,9 @@ sample_threads_result sample_threads(int pid, bool retrieve_dispatch_queue_names
         if (retrieve_backtraces) {
             counters_array[i].backtrace = get_backtrace(thread);
         }
+        
+        // Usage
+        get_cpu_usage();
     }
     
     sample_threads_result result;
