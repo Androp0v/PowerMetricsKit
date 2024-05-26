@@ -9,14 +9,14 @@ import SwiftUI
 
 struct CoreUsageMeter: View {
     
-    let usage: Double
+    let coreUsage: CoreUsage
     let coreType: CoreType?
     
     let numberOfLevels: Int
     let spacing: CGFloat
     
-    init(usage: Double, coreType: CoreType?, numberOfLevels: Int = 20, spacing: CGFloat = 1.0) {
-        self.usage = usage
+    init(usage: CoreUsage, coreType: CoreType?, numberOfLevels: Int = 20, spacing: CGFloat = 1.0) {
+        self.coreUsage = usage
         self.coreType = coreType
         self.numberOfLevels = numberOfLevels
         self.spacing = spacing
@@ -42,7 +42,9 @@ struct CoreUsageMeter: View {
     }
     
     func levelColor(for level: Int) -> Color {
-        if (Double(numberOfLevels - level) /  Double(numberOfLevels)) <= usage {
+        if (Double(numberOfLevels - level) /  Double(numberOfLevels)) <= coreUsage.systemUsage {
+            return .red
+        } else if (Double(numberOfLevels - level) /  Double(numberOfLevels)) <= coreUsage.usage {
             return .green
         } else {
             return .clear

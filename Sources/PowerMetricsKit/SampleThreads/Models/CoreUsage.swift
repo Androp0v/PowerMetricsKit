@@ -8,6 +8,7 @@
 import Foundation
 import SampleThreads
 
+/// The usage (occupancy) of a single core.
 public struct CoreUsage: AdditiveArithmetic {
     /// Number of CPU ticks used at system-level.
     public var systemTicks: Int
@@ -18,13 +19,18 @@ public struct CoreUsage: AdditiveArithmetic {
     /// Number of idle CPU ticks.
     public var idleTicks: Int
     
-    /// Proportion of non-idle vs idle ticks. Ranges from 0 to 1.
+    /// Proportion of non-idle vs total ticks. Ranges from 0 to 1.
     public var usage: Double {
         let nonIdleTicks = systemTicks + userTicks + niceTicks
         return Double(nonIdleTicks) / Double(nonIdleTicks + idleTicks)
     }
+    /// Proportion of system ticks vs total ticks. Ranges from 0 to 1.
+    public var systemUsage: Double {
+        return Double(systemTicks) / Double(userTicks + niceTicks + idleTicks)
+    }
     
-    init(systemTicks: Int, userTicks: Int, niceTicks: Int, idleTicks: Int) {
+    /// Initializes a `CoreUsage` object.
+    public init(systemTicks: Int, userTicks: Int, niceTicks: Int, idleTicks: Int) {
         self.systemTicks = systemTicks
         self.userTicks = userTicks
         self.niceTicks = niceTicks
@@ -40,6 +46,7 @@ public struct CoreUsage: AdditiveArithmetic {
     
     // MARK: - AdditiveArithmetic
     
+    /// Zero element for ``AdditiveArithmetic``.
     public static var zero: CoreUsage = CoreUsage(systemTicks: 0, userTicks: 0, niceTicks: 0, idleTicks: 0)
     
     public static func + (lhs: CoreUsage, rhs: CoreUsage) -> CoreUsage {
@@ -58,13 +65,6 @@ public struct CoreUsage: AdditiveArithmetic {
             niceTicks: lhs.niceTicks - rhs.niceTicks,
             idleTicks: lhs.idleTicks - rhs.idleTicks
         )
-    }
-    
-    public static func -=(lhs: inout CoreUsage, rhs: CoreUsage) {
-        lhs.systemTicks -= rhs.systemTicks
-        lhs.userTicks -= rhs.userTicks
-        lhs.niceTicks -= rhs.niceTicks
-        lhs.idleTicks -= rhs.idleTicks
     }
 }
 

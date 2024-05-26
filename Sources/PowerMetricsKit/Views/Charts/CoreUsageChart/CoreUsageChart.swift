@@ -41,7 +41,7 @@ struct CoreUsageChart: View {
                         GridRow {
                             ForEach(0..<numberOfColumns(row: rowIndex, cpuUsage: cpuUsage)) { columnIndex in
                                 CoreUsageMeter(
-                                    usage: cpuUsage.coreUsages[rowIndex * 4 + columnIndex].usage,
+                                    usage: cpuUsage.coreUsages[rowIndex * 4 + columnIndex],
                                     coreType: nil
                                 )
                             }

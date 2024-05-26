@@ -8,10 +8,11 @@
 import Foundation
 
 /// A ring buffer.
-public struct RingBuffer<T> {
+public final class RingBuffer<T> {
+    
+    private let length: Int
     
     private var array: [T?]
-    private let length: Int
     private var index: Int
     private var isFull: Bool
     
@@ -46,6 +47,7 @@ public struct RingBuffer<T> {
     }
     
     /// Initializes the ring buffer with a fixed capacity.
+    /// - Parameter length: The number of items that can fit inside the ring buffer.
     public init(length: Int) {
         self.array = [T?](repeating: nil, count: length)
         self.length = length
@@ -54,7 +56,7 @@ public struct RingBuffer<T> {
     }
     
     /// Adds a new element to the ring buffer.
-    public mutating func add(element: T) {
+    public func add(element: T) {
         guard isFull else {
             var nextIndex = index + 1
             if nextIndex == length {
