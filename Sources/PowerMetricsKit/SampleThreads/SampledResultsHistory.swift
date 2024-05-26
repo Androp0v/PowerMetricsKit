@@ -17,36 +17,21 @@ import Foundation
     public var maxPower: Power = .zero
     /// The stored power samples.
     public var samples: [SampleThreadsResult] {
-        return ringBuffer.sorted(by: { $0.time < $1.time })
+        return ringBuffer.elements
     }
     
     private let numberOfStoredSamples: Int
-    private var ringBuffer: [SampleThreadsResult]
+    private var ringBuffer: RingBuffer<SampleThreadsResult>
     private var writeIndex: Int = 0
     private var displayableSamples: Int = 0
     
     nonisolated init(numerOfStoredSamples: Int) {
         self.numberOfStoredSamples = numerOfStoredSamples
-        self.ringBuffer = [SampleThreadsResult](repeating: .zero, count: numerOfStoredSamples)
+        self.ringBuffer = RingBuffer(length: numerOfStoredSamples)
     }
     
     func addSample(_ sample: SampleThreadsResult) {
-        
-        let overwrittenSample = ringBuffer[writeIndex]
-        ringBuffer[writeIndex] = sample
-        
-        writeIndex += 1
-        writeIndex = writeIndex % numberOfStoredSamples
-                
-        // Update max power used in the history
-        if overwrittenSample.allThreadsPower.total == maxPower {
-            recomputeMaxPower()
-        } else if sample.allThreadsPower.total > maxPower {
-            maxPower = sample.allThreadsPower.total
-        }
-    }
-    
-    private func recomputeMaxPower() {
-        maxPower = ringBuffer.map({$0.allThreadsPower.total}).max() ?? .zero
+        ringBuffer.add(element: sample)
+        maxPower = ringBuffer.unsortedElements.map({$0.allThreadsPower.total}).max() ?? .zero
     }
 }
