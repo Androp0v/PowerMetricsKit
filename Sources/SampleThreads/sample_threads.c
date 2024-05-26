@@ -7,7 +7,6 @@
 
 #include "sample_threads.h"
 #include "get_backtrace.h"
-#include "get_cpu_usage.h"
 #include <dispatch/dispatch.h>
 #include <stdlib.h>
 #include <mach/mach_init.h>
@@ -124,7 +123,7 @@ sample_threads_result sample_threads(int pid, bool retrieve_dispatch_queue_names
                                                        (thread_info_t)&th_id_info,
                                                        &th_id_count);
             
-            dispatch_queue_t * _Nullable thread_queue = th_id_info.dispatch_qaddr;
+            dispatch_queue_t * _Nullable thread_queue = (dispatch_queue_t *) th_id_info.dispatch_qaddr;
             if (id_info_result == KERN_SUCCESS && thread_queue != NULL) {
                 // TODO: This crashes sometimes, need to investigate why
                 const char  * _Nullable queue_label = dispatch_queue_get_label(*thread_queue);
@@ -198,9 +197,6 @@ sample_threads_result sample_threads(int pid, bool retrieve_dispatch_queue_names
         if (retrieve_backtraces) {
             counters_array[i].backtrace = get_backtrace(thread);
         }
-        
-        // Usage
-        get_cpu_usage();
     }
     
     sample_threads_result result;

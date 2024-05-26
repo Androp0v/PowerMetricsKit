@@ -24,7 +24,7 @@
 
 static void print_backtrace(int line, uint64_t address, intptr_t aslr_slide) {
     Dl_info info;
-    if (dladdr(address, &info) != 0) {
+    if (dladdr((const void *) address, &info) != 0) {
         const char *p = strrchr(info.dli_fname, '/');
         printf("%d %s %p\n",
                line,
@@ -92,15 +92,13 @@ intptr_t get_aslr_slide() {
                     &count);
     
     if (ret != KERN_SUCCESS) {
-        return NULL;
+        return (intptr_t) NULL;
     }
     
     image_infos = dyld_info.all_image_info_addr;
     
     infos = (struct dyld_all_image_infos *)image_infos;
-    return infos->dyldImageLoadAddress;
-    
-    return 0;
+    return (intptr_t) infos->dyldImageLoadAddress;
 }
 
 bool apply_offset(mach_vm_address_t base_address, int64_t offset, mach_vm_address_t *result) {
@@ -143,7 +141,7 @@ backtrace_t frame_walk(mach_port_t task, arm_thread_state64_t thread_state, vm_a
     #if defined(PRINT_BACKTRACES)
     printf("[Thread]\n");
     #endif
-    if (dladdr(thread_state.__lr, &info) != 0) {
+    if (dladdr((const void *) thread_state.__lr, &info) != 0) {
         // Let's walk the stack only for known images...
         while (true) {
             
