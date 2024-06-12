@@ -8,7 +8,7 @@
 import Foundation
 
 /// The configuration of the thread sampling.
-public struct PowerMetricsConfig {
+public struct PowerMetricsConfig: Sendable {
     /// The timespan between each sample.
     public let samplingTime: TimeInterval
     /// The number of samples kept in the power history.

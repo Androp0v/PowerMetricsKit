@@ -14,7 +14,7 @@ import SampleThreads
 }
 
 /// The main class interfacing with the C code that retrieves the energy data.
-@SampleThreadsActor public class SampleThreadsManager {
+@SampleThreadsActor public final class SampleThreadsManager {
     
     // MARK: - Public properties
     
@@ -38,8 +38,6 @@ import SampleThreads
     /// The last value of the counter used to map thread IDs to a monotonously increasing counter.
     private var lastCounter: Int = 0
     
-    private var symbolicator = SymbolicateBacktraces.shared
-
     // MARK: - Init
     
     nonisolated public init(config: PowerMetricsConfig = .default) {
@@ -60,7 +58,7 @@ import SampleThreads
                 guard let self else {
                     return
                 }
-                self.sampleThreads(pid)
+                await self.sampleThreads(pid)
                 try? await Task.sleep(
                     for: .seconds(config.samplingTime),
                     tolerance: .seconds(config.samplingTime * 0.01)
@@ -78,7 +76,7 @@ import SampleThreads
     /// return the `CombinedPower` used for that process.
     /// - Parameter pid: The pid of the process to inspect.
     /// - Returns: A `SampleThreadsResult` object.
-    @discardableResult public func sampleThreads(_ pid: Int32) -> SampleThreadsResult {
+    @discardableResult public func sampleThreads(_ pid: Int32) async -> SampleThreadsResult {
         let currentSampleTime = continuousClock.now
         // Invoke the C code in sample_threads.c that uses proc_pidinfo to retrieve
         // performance counters including energy usage.
@@ -193,7 +191,7 @@ import SampleThreads
             let backtracesWithPower = zip(backtraces, threadEnergyChanges).map { (backtrace, energy) in
                 return Backtrace(addresses: backtrace.addresses, energy: energy)
             }
-            SymbolicateBacktraces.shared.addToBacktraceGraph(backtracesWithPower)
+            await SymbolicateBacktraces.shared.addToBacktraceGraph(backtracesWithPower)
         }
         
         // Free the memory allocated with malloc in sample_threads.c, as we've created

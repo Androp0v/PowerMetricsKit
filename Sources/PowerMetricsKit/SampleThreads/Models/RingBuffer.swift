@@ -9,6 +9,9 @@ import Foundation
 import os
 
 /// A ring buffer.
+///
+/// This class uses `OSAllocatedUnfairLock` to make it thread safe while keeping it
+/// fast.
 public final class RingBuffer<T>: @unchecked Sendable {
     
     private let lock = OSAllocatedUnfairLock()
@@ -90,7 +93,7 @@ public final class RingBuffer<T>: @unchecked Sendable {
 // MARK: - Array
 
 extension Array {
-    init<T>(_ ringBuffer: RingBuffer<T>) where Element == T {
+    init(_ ringBuffer: RingBuffer<Element>) {
         self = Array<Element>(ringBuffer.elements)
     }
 }

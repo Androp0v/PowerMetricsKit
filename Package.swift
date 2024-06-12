@@ -30,5 +30,6 @@ let package = Package(
             ],
             path: "Sources/PowerMetricsKit"
         )
-    ]
+    ],
+    swiftLanguageVersions: [.v5, .version("6")]
 )

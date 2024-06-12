@@ -10,20 +10,20 @@ import Foundation
 /// The memory address retrieved when unwinding the stack during a backtrace.
 public typealias BacktraceAddress = UInt64
 /// The full backtrace and the energy usage associated with it.
-public struct Backtrace: Hashable, Equatable {
+public struct Backtrace: Sendable, Hashable, Equatable {
     public var addresses: [BacktraceAddress]
     public var energy: Energy?
 }
 /// Symbol information of a backtrace, recovered using `dladdr`.
 ///
 /// On iOS, `dladdr` may return `<redacted>` as the image and symbol names.
-public struct SymbolicatedInfo: Hashable {
+public struct SymbolicatedInfo: Sendable, Hashable {
     /// The name of the associated dylib that contains the address.
     public let imageName: String
     /// The offset of the address relative to the start of the dylib.
     public let addressInImage: UInt64
     /// The name of the symbol that contains the address.
-    public let symbolName: String
+    public let symbolName: String?
     /// The offset of the address relative to the start of the symbol.
     public let addressInSymbol: UInt64
     /// A formatted summary of the address information, similar to the lines printed in a crash report.
@@ -32,7 +32,7 @@ public struct SymbolicatedInfo: Hashable {
     }
 }
 /// Minimal piece of information of a backtrace address.
-public struct SimpleBacktraceInfo {
+public struct SimpleBacktraceInfo: Sendable {
     /// A specific address in the backtrace.
     public let address: BacktraceAddress
     /// Symbol information for the given address, recovered using `dladdr`.

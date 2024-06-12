@@ -8,7 +8,7 @@
 import Foundation
 
 /// The information retrieved when sampling a thread, including the power used.
-public struct ThreadSample {
+public struct ThreadSample: Sendable {
     /// The Mach thread ID.
     public let threadID: UInt64
     /// The date at which the sample was taken.

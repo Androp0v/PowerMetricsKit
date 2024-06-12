@@ -16,80 +16,69 @@ import SwiftUI
     }
     
     let sampleManager: SampleThreadsManager
-    let symbolicator = SymbolicateBacktraces.shared
-    @State var expandedInfos = [BacktraceInfo]()
+    @State var callStackViewModel: CallStackViewModel
     @State var showFullInfo: Bool = false
     @AppStorage("callstackVisualization") var visualizationMode: VisualizationMode = .graph
     
-    var sortedGraphBacktraces: [BacktraceInfo] {
-        if let lastExpanded = expandedInfos.last {
-            return lastExpanded.children
-                .sorted(by: { $0.energy > $1.energy })
-        } else {
-            return symbolicator.backtraceGraph.nodes
-                .sorted(by: { $0.energy > $1.energy })
-        }
-    }
-    var sortedFlatBacktraces: [SimpleBacktraceInfo] {
-        return symbolicator.flatBacktraces.sorted(by: { $0.energy > $1.energy })
+    init(sampleManager: SampleThreadsManager) {
+        self.sampleManager = sampleManager
+        self.callStackViewModel = CallStackViewModel(sampleManager: sampleManager)
     }
     
     var body: some View {
         VStack(alignment: .leading, spacing: .zero) {
             Divider()
             
-            TimelineView(.periodic(from: .now, by: sampleManager.config.samplingTime)) { _ in
-                if visualizationMode == .graph {
-                    VStack(alignment: .leading, spacing: .zero) {
-                        if let lastExpanded = expandedInfos.last {
-                            VStack {
-                                BacktraceRowView(
-                                    backtraceInfo: lastExpanded,
-                                    energy: lastExpanded.energy,
-                                    expandedInfos: $expandedInfos, 
-                                    showFullInfo: $showFullInfo
-                                )
-                                if showFullInfo {
-                                    BacktraceInfoView(backtraceInfo: lastExpanded)
-                                }
+            if visualizationMode == .graph {
+                VStack(alignment: .leading, spacing: .zero) {
+                    if let lastExpanded = callStackViewModel.expandedInfos.last {
+                        VStack {
+                            BacktraceRowView(
+                                backtraceInfo: lastExpanded,
+                                energy: lastExpanded.energy,
+                                expandedInfos: $callStackViewModel.expandedInfos,
+                                showFullInfo: $showFullInfo
+                            )
+                            if showFullInfo {
+                                BacktraceInfoView(backtraceInfo: lastExpanded)
                             }
-                            #if os(macOS)
-                            .padding(.vertical, 4)
-                            .padding(.horizontal, 4)
-                            #else
-                            .padding(.vertical, 12)
-                            .padding(.horizontal, 12)
-                            #endif
-                            .background(.blue.opacity(0.3))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                            .padding(.top, 4)
                         }
+                        #if os(macOS)
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 4)
+                        #else
+                        .padding(.vertical, 12)
+                        .padding(.horizontal, 12)
+                        #endif
+                        .background(.blue.opacity(0.3))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .padding(.top, 4)
+                    }
 
-                        if !showFullInfo {
-                            List(sortedGraphBacktraces, id: \.id) { backtraceInfo in
-                                BacktraceRowView(
-                                    backtraceInfo: backtraceInfo,
-                                    energy: backtraceInfo.energy,
-                                    expandedInfos: $expandedInfos, 
-                                    showFullInfo: $showFullInfo
-                                )
-                                .listRowBackground(Color.clear)
-                            }
+                    if !showFullInfo {
+                        List(callStackViewModel.sortedGraphBacktraces, id: \.id) { backtraceInfo in
+                            BacktraceRowView(
+                                backtraceInfo: backtraceInfo,
+                                energy: backtraceInfo.energy,
+                                expandedInfos: $callStackViewModel.expandedInfos,
+                                showFullInfo: $showFullInfo
+                            )
+                            .listRowBackground(Color.clear)
                         }
                     }
-                    .listStyle(.plain)
-                    .scrollContentBackground(.hidden)
-                } else {
-                    List(sortedFlatBacktraces, id: \.address) { simpleBacktraceInfo in
-                        BacktraceRowContentView(
-                            symbolInfo: simpleBacktraceInfo.info,
-                            energy: simpleBacktraceInfo.energy
-                        )
-                        .listRowBackground(Color.clear)
-                    }
-                    .listStyle(.plain)
-                    .scrollContentBackground(.hidden)
                 }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+            } else {
+                List(callStackViewModel.sortedFlatBacktraces, id: \.address) { simpleBacktraceInfo in
+                    BacktraceRowContentView(
+                        symbolInfo: simpleBacktraceInfo.info,
+                        energy: simpleBacktraceInfo.energy
+                    )
+                    .listRowBackground(Color.clear)
+                }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
             }
             
             Divider()
@@ -130,7 +119,7 @@ import SwiftUI
                 #if os(macOS)
                 .buttonStyle(.plain)
                 #endif
-                .disabled(visualizationMode == .flat || expandedInfos.isEmpty)
+                .disabled(visualizationMode == .flat || callStackViewModel.expandedInfos.isEmpty)
             }
             .padding(.top, 8)
         }

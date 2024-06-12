@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-struct PowerWidgetInfo {
+struct PowerWidgetInfo: Sendable {
     var cpuPower: Power
     var cpuEnergy: Energy
     var cpuMaxPower: Power
@@ -39,7 +39,7 @@ struct PowerWidgetInfo {
 }
 
 /// Class to bridge the `SampleThreadsManager` to the UI.
-@Observable class PowerWidgetViewModel {
+@MainActor @Observable final class PowerWidgetViewModel {
     
     let sampleManager: SampleThreadsManager
     var info: PowerWidgetInfo = .empty
@@ -71,9 +71,11 @@ struct PowerWidgetInfo {
     func periodicRefresh() {
         #if os(macOS)
         let timer = Timer(timeInterval: sampleManager.config.samplingTime, repeats: true) { timer in
-            self.update()
+            MainActor.assumeIsolated {
+                self.update()
+            }
         }
-        RunLoop.current.add(timer, forMode: RunLoop.Mode.common)
+        RunLoop.main.add(timer, forMode: RunLoop.Mode.common)
         #else
         let displayLink = CADisplayLink(
             target: self,

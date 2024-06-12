@@ -8,7 +8,7 @@
 import Foundation
 
 /// The processed results from sampling the threads.
-public struct SampleThreadsResult: Identifiable {
+public struct SampleThreadsResult: Sendable, Identifiable {
     /// Unique identifier for the sample.
     public let id = UUID()
     /// The time at which the measurement was performed.

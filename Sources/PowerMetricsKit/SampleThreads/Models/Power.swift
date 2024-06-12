@@ -13,7 +13,7 @@ public typealias Power = Double
 public typealias Energy = Double
 
 /// A combined power measurement composed of measurements for different core types.
-public struct CombinedPower: Equatable, Hashable, AdditiveArithmetic {
+public struct CombinedPower: Sendable, Equatable, Hashable, AdditiveArithmetic {
     /// Power used by the performance cores.
     public let performance: Power
     /// Power used by the efficiency cores.
@@ -46,7 +46,7 @@ public struct CombinedPower: Equatable, Hashable, AdditiveArithmetic {
 // MARK: - Formatting
 
 extension NumberFormatter {
-    static var power: NumberFormatter = {
+    static let power: NumberFormatter = {
         let numberFormatter = NumberFormatter()
         numberFormatter.maximumFractionDigits = 2
         numberFormatter.minimumFractionDigits = 2
@@ -58,7 +58,7 @@ struct ChartPowerFormatStyle {
     
     struct Watts: FormatStyle {
         
-        static var formatter: NumberFormatter = {
+        static let formatter: NumberFormatter = {
             let numberFormatter = NumberFormatter()
             numberFormatter.minimumFractionDigits = 1
             return numberFormatter
@@ -72,7 +72,7 @@ struct ChartPowerFormatStyle {
     
     struct Miliwatts: FormatStyle {
         
-        static var formatter: NumberFormatter = {
+        static let formatter: NumberFormatter = {
             let numberFormatter = NumberFormatter()
             numberFormatter.maximumFractionDigits = 0
             return numberFormatter

@@ -9,7 +9,7 @@ import Foundation
 import SampleThreads
 
 /// Class used to retrieve the usage (occupancy) of each CPU core.
-public class CPUUsageManager {
+public final class CPUUsageManager {
     
     private var results: RingBuffer<[CoreUsage]>
     

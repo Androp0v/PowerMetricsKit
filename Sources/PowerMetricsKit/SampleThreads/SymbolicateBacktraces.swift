@@ -9,7 +9,7 @@ import Foundation
 import SampleThreads
 
 /// A class to interact to `dladdr` to retrieve information about the sampled backtraces.
-public class SymbolicateBacktraces {
+public final class SymbolicateBacktraces: @unchecked Sendable {
     
     public var backtraceGraph = BacktraceGraph()
     public var flatBacktraces = [SimpleBacktraceInfo]()
@@ -22,13 +22,17 @@ public class SymbolicateBacktraces {
     
     // MARK: - Functions
     
-    public func symbolicatedInfo(for address: UInt64) -> SymbolicatedInfo? {
+    nonisolated public func symbolicatedInfo(for address: UInt64) -> SymbolicatedInfo? {
         var dlInfo = Dl_info()
         let addressPointer = UnsafeRawPointer(bitPattern: UInt(address))
         if dladdr(addressPointer, &dlInfo) != 0 {
             let imageName = (String(cString: dlInfo.dli_fname) as NSString).lastPathComponent
             let addressInImage = address - (unsafeBitCast(dlInfo.dli_fbase, to: UInt64.self))
-            let symbolName = (String(cString: dlInfo.dli_sname) as NSString).lastPathComponent
+            let symbolName: String? = if let symbolNamePointer = dlInfo.dli_sname {
+                (String(cString: dlInfo.dli_sname) as NSString).lastPathComponent
+            } else {
+                nil
+            }
             let addressInSymbol = address - (unsafeBitCast(dlInfo.dli_saddr, to: UInt64.self))
             return SymbolicatedInfo(
                 imageName: imageName,

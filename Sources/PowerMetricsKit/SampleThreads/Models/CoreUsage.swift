@@ -9,7 +9,7 @@ import Foundation
 import SampleThreads
 
 /// The usage (occupancy) of a single core.
-public struct CoreUsage: AdditiveArithmetic {
+public struct CoreUsage: Sendable, AdditiveArithmetic {
     /// Number of CPU ticks used at system-level.
     public var systemTicks: Int
     /// Number of CPU ticks used at user-level with application priority.
@@ -47,7 +47,7 @@ public struct CoreUsage: AdditiveArithmetic {
     // MARK: - AdditiveArithmetic
     
     /// Zero element for ``AdditiveArithmetic``.
-    public static var zero: CoreUsage = CoreUsage(systemTicks: 0, userTicks: 0, niceTicks: 0, idleTicks: 0)
+    public static let zero: CoreUsage = CoreUsage(systemTicks: 0, userTicks: 0, niceTicks: 0, idleTicks: 0)
     
     public static func + (lhs: CoreUsage, rhs: CoreUsage) -> CoreUsage {
         CoreUsage(
