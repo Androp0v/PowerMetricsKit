@@ -7,6 +7,8 @@
 
 #ifndef get_cpu_usage_h
 #define get_cpu_usage_h
+
+#include <stdint.h>
 #include <stdio.h>
 
 typedef struct {
