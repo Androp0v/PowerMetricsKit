@@ -11,12 +11,13 @@ import SampleThreads
 /// Class used to retrieve the usage (occupancy) of each CPU core.
 public class CPUUsageManager {
     
-    private var results = RingBuffer<[CoreUsage]>(length: 64)
+    private var results: RingBuffer<[CoreUsage]>
     
     // MARK: - Init
     
-    private init() {}
-    public static let shared = CPUUsageManager()
+    nonisolated public init(config: PowerMetricsConfig = .default) {
+        self.results = RingBuffer<[CoreUsage]>(length: config.numberOfStoredSamples)
+    }
     
     // MARK: - Functions
     

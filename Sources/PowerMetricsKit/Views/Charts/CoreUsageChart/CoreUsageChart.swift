@@ -9,9 +9,13 @@ import SwiftUI
 
 struct CoreUsageChart: View {
     
-    let cpuUsageManager = CPUUsageManager.shared
+    @State var cpuUsageManager: CPUUsageManager
+    let samplingTime: TimeInterval
     
-    init() {}
+    init(config: PowerMetricsConfig = .default) {
+        self.cpuUsageManager = CPUUsageManager(config: config)
+        self.samplingTime = config.samplingTime
+    }
     
     func numberOfRows(cpuUsage: CPUUsage) -> Int {
         let numberOfCores = cpuUsage.numberOfCores
@@ -34,7 +38,7 @@ struct CoreUsageChart: View {
     }
     
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 0.5)) { _ in
+        TimelineView(.periodic(from: .now, by: samplingTime)) { _ in
             if let cpuUsage = cpuUsageManager.getCPUUsage() {
                 Grid {
                     ForEach(0..<numberOfRows(cpuUsage: cpuUsage)) { rowIndex in

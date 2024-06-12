@@ -6,10 +6,12 @@
 //
 
 import Foundation
+import os
 
 /// A ring buffer.
-public final class RingBuffer<T> {
+public final class RingBuffer<T>: @unchecked Sendable {
     
+    private let lock = OSAllocatedUnfairLock()
     private let length: Int
     
     private var array: [T?]
@@ -23,6 +25,10 @@ public final class RingBuffer<T> {
     
     /// All the elements in the array, in the order they were added.
     var elements: [T] {
+        lock.lock()
+        defer {
+            lock.unlock()
+        }
         guard isFull else {
             return Array(array.prefix(index)).compactMap { $0 }
         }
@@ -39,6 +45,10 @@ public final class RingBuffer<T> {
     ///
     /// This is faster than accessing ``elements`` as the ring buffer doesn't need to be sorted.
     var unsortedElements: [T] {
+        lock.lock()
+        defer {
+            lock.unlock()
+        }
         if !isFull {
             return array.compactMap { $0 }
         } else {
@@ -57,6 +67,10 @@ public final class RingBuffer<T> {
     
     /// Adds a new element to the ring buffer.
     public func add(element: T) {
+        lock.lock()
+        defer {
+            lock.unlock()
+        }
         guard isFull else {
             var nextIndex = index + 1
             if nextIndex == length {
