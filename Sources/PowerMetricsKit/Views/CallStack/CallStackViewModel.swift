@@ -51,8 +51,8 @@ import SwiftUI
             selector: #selector(update)
         )
         displayLink.preferredFrameRateRange = .init(
-            minimum: Float(1 / sampleManager.config.samplingTime),
-            maximum: Float(1 / sampleManager.config.samplingTime)
+            minimum: Float(1 / samplingTime),
+            maximum: Float(1 / samplingTime)
         )
         displayLink.add(to: .current, forMode: .common)
         #endif
