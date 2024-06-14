@@ -6,27 +6,37 @@
 //
 
 import Foundation
+import os
 
 /// A graph containing the recorded backtrace information.
-public final class BacktraceGraph {
+public final class BacktraceGraph: @unchecked Sendable {
     
     /// Top level nodes of the backtrace graph.
     ///
     /// These are the addresses from which all the function calls sampled come from.
-    public var nodes = [BacktraceInfo]()
+    public var nodes: [BacktraceInfo] {
+        nodeLock.withLock {
+            return _nodes.map { BacktraceInfo(mutableBacktraceInfo: $0) }
+        }
+    }
+    
+    private var nodeLock = OSAllocatedUnfairLock()
+    private var _nodes = [MutableBacktraceInfo]()
         
-    private func insertInGraph(at insertionPoint: BacktraceInfo?, newInfo: BacktraceInfo) {
-        if let insertionPoint {
+    private func insertInGraph(at insertionPoint: MutableBacktraceInfo?, newInfo: MutableBacktraceInfo) {
+        if var insertionPoint {
             // precondition(addressToBacktrace.keys.contains(insertionPoint.address))
             insertionPoint.children.append(newInfo)
         } else {
             // print("New info not in graph, adding it as root element")
-            nodes.append(newInfo)
+            nodeLock.lock()
+            _nodes.append(newInfo)
+            nodeLock.unlock()
         }
     }
     
     struct InsertionPointResult {
-        let insertionPoint: BacktraceInfo?
+        let insertionPoint: MutableBacktraceInfo?
         let remainingAddresses: [BacktraceAddress]
     }
     
@@ -36,7 +46,11 @@ public final class BacktraceGraph {
             // print("Attempted to insert empty backtrace")
             throw BacktraceGraphError.emptyBacktrace
         }
-        if let existingInfo = nodes.first(where: { $0.address == outermostAddress }) {
+        nodeLock.lock()
+        defer {
+            nodeLock.unlock()
+        }
+        if var existingInfo = _nodes.first(where: { $0.address == outermostAddress }) {
             
             // Add the energy information from the new backtrace to the outermost node
             existingInfo.energy += newBacktrace.energy ?? .zero
@@ -55,7 +69,7 @@ public final class BacktraceGraph {
                         insertionPoint: insertionPoint,
                         remainingAddresses: Array(remainingAddresses)
                     )
-                } else if let matchingChild = insertionPoint.children.first(where: { $0.address == nextAddress }) {
+                } else if var matchingChild = insertionPoint.children.first(where: { $0.address == nextAddress }) {
                     // Add the energy information from the new backtrace to the children
                     matchingChild.energy += newBacktrace.energy ?? .zero
                     // Existing backtrace info contains a child with the same address
@@ -116,24 +130,26 @@ public final class BacktraceGraph {
         return backtrace
     }
     
-    private func createBacktraceInfo(for addresses: [BacktraceAddress]) -> BacktraceInfo {
+    private func createBacktraceInfo(for addresses: [BacktraceAddress]) -> MutableBacktraceInfo {
         if let outermostAddress = addresses.last {
             if outermostAddress == .zero {
                 return createBacktraceInfo(for: addresses.dropLast())
             }
             let symbolicatedInfo = SymbolicateBacktraces.shared.symbolicatedInfo(for: outermostAddress)
-            let backtraceInfo = BacktraceInfo(
+            let children: [MutableBacktraceInfo] = if addresses.count != 1 {
+                [createBacktraceInfo(for: addresses.dropLast())]
+            } else {
+                []
+            }
+            let backtraceInfo = MutableBacktraceInfo(
                 address: outermostAddress,
                 info: symbolicatedInfo,
                 energy: .zero,
-                children: []
+                children: children
             )
-            if addresses.count != 1 {
-                backtraceInfo.children = [createBacktraceInfo(for: addresses.dropLast())]
-            }
             return backtraceInfo
         } else {
-            return BacktraceInfo(address: .zero, info: nil, energy: .zero, children: [])
+            return MutableBacktraceInfo(address: .zero, info: nil, energy: .zero, children: [])
         }
     }
 }

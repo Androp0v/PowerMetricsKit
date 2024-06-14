@@ -48,7 +48,37 @@ public struct SimpleBacktraceInfo: Sendable {
     }
 }
 /// Full backtrace information.
-public final class BacktraceInfo: Identifiable {
+public struct BacktraceInfo: Sendable, Identifiable {
+    /// A unique identifier for the backtrace information.
+    public let id = UUID()
+    /// A specific address in the backtrace.
+    public let address: BacktraceAddress
+    /// Symbol information for the given address, recovered using `dladdr`.
+    public let info: SymbolicatedInfo?
+    /// The energy reported by the CLPC for the thread at the moment when the backtrace was
+    /// sampled.
+    public let energy: Energy
+    /// Backtrace address that were called from this `address`.
+    public let children: [BacktraceInfo]
+    
+    public init(mutableBacktraceInfo: MutableBacktraceInfo) {
+        self.address = mutableBacktraceInfo.address
+        self.energy = mutableBacktraceInfo.energy
+        self.info = mutableBacktraceInfo.info
+        self.children = mutableBacktraceInfo.children.map {
+            BacktraceInfo(mutableBacktraceInfo: $0)
+        }
+    }
+    
+    init(address: BacktraceAddress, info: SymbolicatedInfo?, energy: Energy, children: [BacktraceInfo]) {
+        self.address = address
+        self.energy = energy
+        self.info = info
+        self.children = children
+    }
+}
+/// Full backtrace information.
+public final class MutableBacktraceInfo: Identifiable {
     /// A unique identifier for the backtrace information.
     public let id = UUID()
     /// A specific address in the backtrace.
@@ -59,9 +89,9 @@ public final class BacktraceInfo: Identifiable {
     /// sampled.
     public var energy: Energy
     /// Backtrace address that were called from this `address`.
-    public var children: [BacktraceInfo]
+    public var children: [MutableBacktraceInfo]
     
-    init(address: BacktraceAddress, info: SymbolicatedInfo?, energy: Energy, children: [BacktraceInfo]) {
+    init(address: BacktraceAddress, info: SymbolicatedInfo?, energy: Energy, children: [MutableBacktraceInfo]) {
         self.address = address
         self.energy = energy
         self.info = info

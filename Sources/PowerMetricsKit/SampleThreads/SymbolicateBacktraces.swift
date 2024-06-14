@@ -8,8 +8,8 @@
 import Foundation
 import SampleThreads
 
-/// A class to interact to `dladdr` to retrieve information about the sampled backtraces.
-public final class SymbolicateBacktraces: @unchecked Sendable {
+/// An actor to interact to `dladdr` to retrieve information about the sampled backtraces.
+public actor SymbolicateBacktraces {
     
     public var backtraceGraph = BacktraceGraph()
     public var flatBacktraces = [SimpleBacktraceInfo]()
